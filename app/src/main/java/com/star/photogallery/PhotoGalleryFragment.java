@@ -2,14 +2,19 @@ package com.star.photogallery;
 
 
 import android.app.Activity;
+import android.app.SearchManager;
+import android.app.SearchableInfo;
+import android.content.ComponentName;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -59,6 +64,7 @@ public class PhotoGalleryFragment extends Fragment {
                 }
             }
         });
+        mThumbnailThread.setPriority(5);
         mThumbnailThread.start();
         mThumbnailThread.getLooper();
         Log.i(TAG, "Background thread started");
@@ -69,6 +75,7 @@ public class PhotoGalleryFragment extends Fragment {
         SingletonLruCache.getInstance(catchSize);
 
         mThumbnailCacheThread = new ThumbnailCacheDownloader();
+        mThumbnailCacheThread.setPriority(1);
         mThumbnailCacheThread.start();
     }
 
@@ -95,7 +102,7 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
 
-        setupAdapter();
+//        setupAdapter();
 
         return v;
     }
@@ -207,6 +214,19 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+
+            SearchView searchView = (SearchView) searchItem.getActionView();
+
+            SearchManager searchManager = (SearchManager)
+                    getActivity().getSystemService(Context.SEARCH_SERVICE);
+            ComponentName componentName = getActivity().getComponentName();
+            SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
+
+            searchView.setSearchableInfo(searchableInfo);
+        }
     }
 
     @Override
@@ -226,7 +246,16 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     public void updateItems() {
+
+        mCurrentPage = 1;
+        mFetchedPage = 0;
+        mCurrentPosition = 0;
+
+        mItems = null;
+
         new FetchItemsTask().execute(mCurrentPage);
+
+        setupAdapter();
     }
 
 }

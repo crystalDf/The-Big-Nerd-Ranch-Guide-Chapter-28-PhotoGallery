@@ -32,6 +32,13 @@ public class FlickrFetchr {
     private static final String PAGE = "page";
 
     private static final String XML_PHOTO = "photo";
+    private static final String XML_PHOTOS = "photos";
+
+    private String mTotalSearch;
+
+    public String getTotalSearch() {
+        return mTotalSearch;
+    }
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
@@ -136,6 +143,9 @@ public class FlickrFetchr {
                 item.setCaption(caption);
                 item.setUrl(smallUrl);
                 items.add(item);
+            } else if (eventType == XmlPullParser.START_TAG &&
+                    XML_PHOTOS.equals(parser.getName())) {
+                mTotalSearch = parser.getAttributeValue(null, "total");
             }
             eventType = parser.next();
         }

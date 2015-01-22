@@ -26,6 +26,7 @@ import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -41,6 +42,8 @@ public class PhotoGalleryFragment extends Fragment {
     private int mCurrentPage = 1;
     private int mFetchedPage = 0;
     private int mCurrentPosition = 0;
+
+    private String mTotalSearch;
 
     private ThumbnailCacheDownloader mThumbnailCacheThread;
 
@@ -137,14 +140,25 @@ public class PhotoGalleryFragment extends Fragment {
                     .getString(FlickrFetchr.PREF_SEARCH_QUERY, null);
 
             if (query != null) {
-                return new FlickrFetchr().search(query, params[0]);
+
+                FlickrFetchr flickrFetchr = new FlickrFetchr();
+                ArrayList<GalleryItem> items = flickrFetchr.search(query, params[0]);
+                mTotalSearch = flickrFetchr.getTotalSearch();
+                return items;
             } else {
+                mTotalSearch = null;
                 return new FlickrFetchr().fetchItems(params[0]);
             }
         }
 
         @Override
         protected void onPostExecute(ArrayList<GalleryItem> items) {
+
+            if (mTotalSearch != null) {
+                Toast.makeText(getActivity(), mTotalSearch,
+                        Toast.LENGTH_LONG).show();
+            }
+
             if (mItems == null) {
                 mItems = items;
             } else {
@@ -215,25 +229,31 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
-
-            SearchView searchView = (SearchView) searchItem.getActionView();
-
-            SearchManager searchManager = (SearchManager)
-                    getActivity().getSystemService(Context.SEARCH_SERVICE);
-            ComponentName componentName = getActivity().getComponentName();
-            SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
-
-            searchView.setSearchableInfo(searchableInfo);
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+//            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+//
+//            SearchView searchView = (SearchView) searchItem.getActionView();
+//
+//            SearchManager searchManager = (SearchManager)
+//                    getActivity().getSystemService(Context.SEARCH_SERVICE);
+//            ComponentName componentName = getActivity().getComponentName();
+//            SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
+//
+//            searchView.setSearchableInfo(searchableInfo);
+//            searchView.setSubmitButtonEnabled(true);
+//        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_search:
-                getActivity().onSearchRequested();
+//                getActivity().onSearchRequested();
+
+                String query = PreferenceManager.getDefaultSharedPreferences(getActivity())
+                        .getString(FlickrFetchr.PREF_SEARCH_QUERY, null);
+
+                getActivity().startSearch(query, true, null, false);
                 return true;
             case R.id.menu_item_clear:
                 PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()

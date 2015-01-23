@@ -8,7 +8,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -54,7 +53,6 @@ public class PhotoGalleryFragment extends Fragment {
         setRetainInstance(true);
         setHasOptionsMenu(true);
 
-//        new FetchItemsTask().execute(mCurrentPage);
         updateItems();
 
         mThumbnailThread = new ThumbnailDownloader<>(new Handler());
@@ -229,18 +227,23 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-//            MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        SearchManager searchManager = (SearchManager)
+                getActivity().getSystemService(Context.SEARCH_SERVICE);
+        ComponentName componentName = getActivity().getComponentName();
+        SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
+
+        searchView.setSearchableInfo(searchableInfo);
+        searchView.setSubmitButtonEnabled(true);
+
+//        String query = PreferenceManager.getDefaultSharedPreferences(getActivity())
+//                .getString(FlickrFetchr.PREF_SEARCH_QUERY, null);
 //
-//            SearchView searchView = (SearchView) searchItem.getActionView();
-//
-//            SearchManager searchManager = (SearchManager)
-//                    getActivity().getSystemService(Context.SEARCH_SERVICE);
-//            ComponentName componentName = getActivity().getComponentName();
-//            SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
-//
-//            searchView.setSearchableInfo(searchableInfo);
-//            searchView.setSubmitButtonEnabled(true);
+//        if (query != null) {
+//            searchView.setQuery(query, true);
 //        }
     }
 
@@ -248,8 +251,6 @@ public class PhotoGalleryFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_search:
-//                getActivity().onSearchRequested();
-
                 String query = PreferenceManager.getDefaultSharedPreferences(getActivity())
                         .getString(FlickrFetchr.PREF_SEARCH_QUERY, null);
 
